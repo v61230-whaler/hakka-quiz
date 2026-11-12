@@ -60,7 +60,6 @@ body.boss .tag{color:#2a1a2e}
 body.boss .btn{color:#2a1a2e}
 .btn:disabled{opacity:.4;cursor:default;box-shadow:none}
 .btn:not(:disabled):active{transform:translateY(2px);box-shadow:0 2px 0 var(--main-d)}
-.btn.ghost{background:transparent;color:var(--sub);box-shadow:none;border:2px solid var(--line);font-size:16px;padding:10px}
 .center{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:12px}
 .center h1{font-size:28px;margin:0}
 .center p{margin:0;font-size:16px;line-height:1.6;color:var(--sub)}
@@ -111,8 +110,6 @@ const 關卡 = [
    引:"特別說明喔，這一組不屬於聲母，只是原味加了一個 i。"},
   {型:"多選", 題:"選出國小學的注音裡「沒有」的聲母（選兩個）", 選:["v","b","ng","f","h"], 答:[0,2], 秒:81,
    引:"還有兩個，是我們國小學的注音裡沒有的。……v 和 ng，是注音沒有的兩個。"},
-  {型:"分類", 題:"這些號碼各是哪一區？", 類:["黑白區","彩色區"], 物:[["二號",0],["五號",1],["三號",0],["六號",1]], 秒:45,
-   引:"聲母可以分成六組：一號到三號是黑白區，四號到六號是彩色區。"},
   {型:"單選", 題:"影片用什麼情境說明 ng 的念法？", 選:["說「嗯，不要」時開頭那個「嗯」","念英文的 n","念英文的 v","念注音的ㄏ"], 秒:95,
    引:"第二個是 ng，就像同學約你去逛街，你說「嗯，不要」，開頭那個「嗯」。"},
   {型:"是非", 題:"六號是 zh、ch、sh，再加上 rh，對應的注音是ㄓ、ㄔ、ㄕ、ㄖ。", 答:true, 秒:145,
@@ -349,10 +346,8 @@ function 結算(){
   app.innerHTML = `<div class="center">
     <div class="score">${對} / ${總}</div><p>${話}　用時 ${秒} 秒</p>
     ${錯.length?`<div class="review">${錯.map(r=>`<div>${r.q.題}<br><b>${正解文(r.q)}</b>　${連結(r.q)}</div>`).join("")}</div>`:""}
-    <button class="btn" id="again">再玩一次</button>
-    <button class="btn ghost" id="home">回到關卡</button></div>`;
+    <button class="btn" id="again">再玩一次</button></div>`;
   document.getElementById("again").onclick=()=>開玩(這關.id);
-  document.getElementById("home").onclick=首頁;
 }
 首頁();
 </script>
