@@ -197,7 +197,7 @@ function 首頁(){
     ${成績網址?`<div class="who">
       <p class="small">請選學校、輸入名字，成績會記錄給老師。考不好沒關係，可以重考刷新分數。</p>
       <select id="sch" class="sid"><option value="">請選學校</option>${學校名單.map(s=>`<option${s===學校?" selected":""}>${s}</option>`).join("")}<option value="其他">其他學校</option></select>
-      <input id="sch2" class="sid" maxlength="4" placeholder="學校（最多 4 個字）" style="display:none" autocomplete="off">
+      <input id="sch2" class="sid" maxlength="40" placeholder="請輸入學校名稱" style="display:none" autocomplete="off">
       <input id="nm" class="sid" maxlength="8" placeholder="名字" value="${姓名}" autocomplete="off">
       <p class="hint" id="hint"></p></div>`:""}
     <div class="lv">
@@ -209,7 +209,7 @@ function 首頁(){
   app.querySelectorAll(".lv button").forEach(b=> b.onclick=()=>{
     if(sch){
       const 其他 = sch.value==="其他";
-      學校 = (其他 ? document.getElementById("sch2").value : sch.value).replace(/[^一-鿿A-Za-z0-9]/g,"").slice(0,4);
+      學校 = (其他 ? document.getElementById("sch2").value : sch.value).replace(/[^一-鿿A-Za-z0-9]/g,"").slice(0,40);
       姓名 = document.getElementById("nm").value.replace(/[^一-鿿A-Za-z·]/g,"").slice(0,8);
       if(!學校 || !姓名){
         document.getElementById("hint").textContent = !學校 && !姓名 ? "請先選學校、輸入名字，才能開始測驗。" : (!學校 ? "請選學校（或選「其他學校」自己輸入）。" : "請輸入名字。");
