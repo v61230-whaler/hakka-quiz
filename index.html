@@ -63,6 +63,8 @@ body.boss .tag{color:#2a1a2e}
 .ovp iframe{position:absolute;inset:0;width:100%;height:100%}
 .ovm{margin:10px 0;text-align:center;font-size:15px;color:var(--sub)} .ovm.ok{color:var(--ok);font-weight:700}
 .ovlink{display:block;text-align:center;margin-top:10px;font-size:13px;color:var(--sub)}
+.ovlink.big{font-size:17px;font-weight:700;color:var(--main-d);padding:12px;border:2px solid var(--main);border-radius:12px;text-decoration:none}
+.ovbox{max-height:calc(100vh - 24px);overflow:auto}
 .btn{font:inherit;font-size:19px;font-weight:700;width:100%;padding:13px;border-radius:14px;border:0;
   background:var(--main);color:#fff;box-shadow:0 4px 0 var(--main-d);cursor:pointer}
 body.boss .btn{color:#2a1a2e}
@@ -209,12 +211,22 @@ function 看影片(v, t, n, done){
   const 夠 = ()=>{ if(完) return; 完 = true; msg.className = "ovm ok"; msg.textContent = "✔ 看完了！按「回到題目」繼續。"; if(done) done(); };
   const 關 = ()=>{ clearInterval(輪詢); try{ 播放器 && 播放器.destroy(); }catch(e){} 播放器 = null; ov.remove(); };
   ov.querySelector("#ovx").onclick = 關;
-  const 備援 = ()=>{ if(!ov.isConnected) return; msg.textContent = "影片在這裡播不出來，請用下面的連結開啟看，看完回到這個畫面。"; setTimeout(夠, 12000); };
+  let 就緒 = false, 備過 = false;
+  const 備援 = ()=>{
+    if(!ov.isConnected || 備過 || 完) return; 備過 = true;
+    try{ 播放器 && 播放器.destroy(); }catch(e){} 播放器 = null; clearInterval(輪詢);
+    ov.querySelector(".ovp").style.display = "none";
+    msg.innerHTML = `影片在這裡播不出來（可能是網路擋住了）。<br>請按下面的連結在 YouTube 看，看完回到這個畫面，再按「回到題目」。`;
+    ov.querySelector(".ovlink").classList.add("big");
+    setTimeout(夠, 12000);
+  };
   載YT(ok=>{
     if(!ok || !ov.isConnected){ 備援(); return; }
     try{
-      播放器 = new YT.Player(ov.querySelector("#ytp"), { videoId:id, playerVars:{ start:t, autoplay:1, rel:0, playsinline:1, modestbranding:1 },
-        events:{ onReady:e=>e.target.playVideo(), onStateChange:e=>{ if(e.data===0) 夠(); }, onError:備援 } });
+      // 用不帶 cookie 的嵌入網域(youtube-nocookie),避免瀏覽器 cookie 太多造成 413「請求太大」
+      播放器 = new YT.Player(ov.querySelector("#ytp"), { host:"https://www.youtube-nocookie.com", videoId:id, playerVars:{ start:t, autoplay:1, rel:0, playsinline:1, modestbranding:1 },
+        events:{ onReady:e=>{ 就緒 = true; e.target.playVideo(); }, onStateChange:e=>{ if(e.data===0) 夠(); }, onError:備援 } });
+      setTimeout(()=>{ if(!就緒) 備援(); }, 7000);   // 7 秒內沒載入(例如出現 413 錯誤頁)就改用備援
       輪詢 = setInterval(()=>{
         try{
           const c = 播放器.getCurrentTime();
