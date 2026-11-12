@@ -55,6 +55,14 @@ body.boss .tag{color:#2a1a2e}
 .ans{font-size:15px;margin:0 0 4px;font-weight:700}
 .src{font-size:14px;color:var(--sub);margin:0 0 10px}
 .src a{color:var(--main-d);font-weight:700} body.boss .src a{color:var(--main)}
+.src a.vlink{display:inline-block;padding:7px 14px;border-radius:999px;border:2px solid var(--main);text-decoration:none}
+.src a.vlink::before,.review a.vlink::before{content:"▶ "}
+.ov{position:fixed;inset:0;background:rgba(20,12,8,.85);display:flex;align-items:center;justify-content:center;z-index:50;padding:12px}
+.ovbox{background:var(--card);color:var(--ink);border-radius:16px;width:100%;max-width:560px;padding:12px}
+.ovp{position:relative;padding-top:56.25%;background:#000;border-radius:10px;overflow:hidden}
+.ovp iframe{position:absolute;inset:0;width:100%;height:100%}
+.ovm{margin:10px 0;text-align:center;font-size:15px;color:var(--sub)} .ovm.ok{color:var(--ok);font-weight:700}
+.ovlink{display:block;text-align:center;margin-top:10px;font-size:13px;color:var(--sub)}
 .btn{font:inherit;font-size:19px;font-weight:700;width:100%;padding:13px;border-radius:14px;border:0;
   background:var(--main);color:#fff;box-shadow:0 4px 0 var(--main-d);cursor:pointer}
 body.boss .btn{color:#2a1a2e}
@@ -172,7 +180,56 @@ const 型名 = {單選:"單選題",是非:"對錯題",多選:"多選題",配對:
 const app = document.getElementById("app");
 const 時間 = s => Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
 const 洗牌 = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
-const 連結 = q => `<a href="${片[q.片].網址}?t=${q.秒}" target="_blank" rel="noopener">${片[q.片].名}影片 ${時間(q.秒)}</a>`;
+// 影片連結:點了在頁面裡開播放視窗(不離開測驗);沒有 JavaScript 或播不出來時,連結本身仍可在新分頁開啟
+const 需 = q => Math.max(6, Math.min(20, Math.round(q.引.length/4.5)+2));   // 要看幾秒才算看完
+const 連結 = q => `<a class="vlink" href="${片[q.片].網址}?t=${q.秒}" target="_blank" rel="noopener" data-v="${q.片}" data-t="${q.秒}" data-n="${需(q)}">${片[q.片].名}影片 ${時間(q.秒)}</a>`;
+let 播放器 = null, 輪詢 = null;
+function 載YT(cb){
+  if(window.YT && YT.Player) return cb(true);
+  if(!window.__ytq){
+    window.__ytq = [];
+    window.onYouTubeIframeAPIReady = ()=>{ window.__ytq.splice(0).forEach(f=>f(true)); };
+    const s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api";
+    s.onerror = ()=>{ window.__ytq.splice(0).forEach(f=>f(false)); };
+    document.head.appendChild(s);
+  }
+  window.__ytq.push(cb);
+  setTimeout(()=>{ const i = window.__ytq.indexOf(cb); if(i>=0){ window.__ytq.splice(i,1); cb(false); } }, 8000);
+}
+function 看影片(v, t, n, done){
+  const url = 片[v].網址, id = url.split("/").pop();
+  const ov = document.createElement("div"); ov.className = "ov";
+  ov.innerHTML = `<div class="ovbox">
+    <div class="ovp"><div id="ytp"></div></div>
+    <p class="ovm" id="ovm">影片載入中…看到 ${時間(t+n)} 就可以了</p>
+    <button class="btn" id="ovx">回到題目</button>
+    <a class="ovlink" href="${url}?t=${t}" target="_blank" rel="noopener">影片播不出來？在 YouTube 開啟</a></div>`;
+  document.body.appendChild(ov);
+  const msg = ov.querySelector("#ovm"); let 完 = false;
+  const 夠 = ()=>{ if(完) return; 完 = true; msg.className = "ovm ok"; msg.textContent = "✔ 看完了！按「回到題目」繼續。"; if(done) done(); };
+  const 關 = ()=>{ clearInterval(輪詢); try{ 播放器 && 播放器.destroy(); }catch(e){} 播放器 = null; ov.remove(); };
+  ov.querySelector("#ovx").onclick = 關;
+  const 備援 = ()=>{ if(!ov.isConnected) return; msg.textContent = "影片在這裡播不出來，請用下面的連結開啟看，看完回到這個畫面。"; setTimeout(夠, 12000); };
+  載YT(ok=>{
+    if(!ok || !ov.isConnected){ 備援(); return; }
+    try{
+      播放器 = new YT.Player(ov.querySelector("#ytp"), { videoId:id, playerVars:{ start:t, autoplay:1, rel:0, playsinline:1, modestbranding:1 },
+        events:{ onReady:e=>e.target.playVideo(), onStateChange:e=>{ if(e.data===0) 夠(); }, onError:備援 } });
+      輪詢 = setInterval(()=>{
+        try{
+          const c = 播放器.getCurrentTime();
+          if(播放器.getPlayerState()===1 && c >= t+n) 夠();
+          else if(!完) msg.textContent = `看到 ${時間(Math.floor(t+n))} 就可以了`;
+        }catch(e){}
+      }, 500);
+    }catch(e){ 備援(); }
+  });
+}
+document.addEventListener("click", e=>{
+  const a = e.target.closest && e.target.closest("a.vlink"); if(!a) return;
+  e.preventDefault();
+  看影片(a.dataset.v, +a.dataset.t, +a.dataset.n, a._done);
+});
 function 讀(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function 存(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 function 正解文(q){
@@ -197,7 +254,7 @@ function 首頁(){
     ${成績網址?`<div class="who">
       <p class="small">請選學校、輸入名字，成績會記錄給老師。考不好沒關係，可以重考刷新分數。</p>
       <select id="sch" class="sid"><option value="">請選學校</option>${學校名單.map(s=>`<option${s===學校?" selected":""}>${s}</option>`).join("")}<option value="其他">其他學校</option></select>
-      <input id="sch2" class="sid" maxlength="40" placeholder="請輸入學校名稱" style="display:none" autocomplete="off">
+      <input id="sch2" class="sid" maxlength="11" placeholder="請輸入學校名稱（最多 11 個字）" style="display:none" autocomplete="off">
       <input id="nm" class="sid" maxlength="8" placeholder="名字" value="${姓名}" autocomplete="off">
       <p class="hint" id="hint"></p></div>`:""}
     <div class="lv">
@@ -209,7 +266,7 @@ function 首頁(){
   app.querySelectorAll(".lv button").forEach(b=> b.onclick=()=>{
     if(sch){
       const 其他 = sch.value==="其他";
-      學校 = (其他 ? document.getElementById("sch2").value : sch.value).replace(/[^一-鿿A-Za-z0-9]/g,"").slice(0,40);
+      學校 = (其他 ? document.getElementById("sch2").value : sch.value).replace(/[^一-鿿A-Za-z0-9]/g,"").slice(0,11);
       姓名 = document.getElementById("nm").value.replace(/[^一-鿿A-Za-z·]/g,"").slice(0,8);
       if(!學校 || !姓名){
         document.getElementById("hint").textContent = !學校 && !姓名 ? "請先選學校、輸入名字，才能開始測驗。" : (!學校 ? "請選學校（或選「其他學校」自己輸入）。" : "請輸入名字。");
@@ -257,19 +314,10 @@ function 交(q, ok){
     <button class="btn" id="nx">${末?"看結果":"下一題"}</button>`;
   const nx = document.getElementById("nx");
   nx.onclick=()=>{ 位++; 末?結算():出題(); };
-  // 答錯：要先點影片連結、等影片重點看完（10 秒）才能按下一題
+  // 答錯：要先在頁面裡看完影片重點，才能按下一題（影片在頁面內播放，不會離開）
   if(!ok){
-    nx.disabled = true; nx.textContent = "請先點上面的影片連結，看完再按";
-    let 開過 = false;
-    fb.querySelector(".src a").addEventListener("click", ()=>{
-      if(開過) return; 開過 = true;
-      let n = 10; nx.textContent = `看完影片重點才能按（${n}）`;
-      const t = setInterval(()=>{
-        n--;
-        if(n<=0){ clearInterval(t); nx.disabled = false; nx.textContent = 末?"看結果":"下一題"; }
-        else nx.textContent = `看完影片重點才能按（${n}）`;
-      }, 1000);
-    });
+    nx.disabled = true; nx.textContent = "請先按上面的「看影片重點」，看完再按";
+    fb.querySelector("a.vlink")._done = ()=>{ nx.disabled = false; nx.textContent = 末?"看結果":"下一題"; };
   }
 }
 function 確定鈕(act, 可交, 評分){
