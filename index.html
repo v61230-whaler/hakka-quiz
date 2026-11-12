@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>牛肉麵攤營業中・拼音後測</title>
+<style>
+:root{
+  --bg:#fbf4e8; --card:#fffdf8; --ink:#3a2a1e; --sub:#8a7560; --line:#e6d8c3;
+  --main:#c8462b; --main-d:#a33820; --ok:#2e8b57; --ok-bg:#e3f4ea; --bad:#c0392b; --bad-bg:#fbe5e1;
+}
+body.boss{--bg:#2a1a2e; --card:#3a2540; --ink:#fff4d6; --sub:#cdb88a; --line:#5a4263; --main:#e0a526; --main-d:#a9780f; --ok:#6fd49a; --ok-bg:#1f4a36; --bad:#ff7a6b; --bad-bg:#5a2a2a}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);
+  font-family:"GenSenRounded TW","源泉圓體 TW","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  -webkit-tap-highlight-color:transparent}
+#app{max-width:560px;margin:0 auto;min-height:100vh;padding:14px 16px 20px;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;justify-content:space-between;color:var(--sub);font-size:14px;min-height:24px;gap:8px}
+.dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.dots i{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.dots i.now{background:var(--main)} .dots i.ok{background:var(--ok)} .dots i.bad{background:var(--bad)}
+.stem{font-size:22px;line-height:1.5;font-weight:700;margin:16px 0 12px}
+.opts{display:grid;gap:9px}
+.opt{font:inherit;font-size:18px;text-align:left;padding:11px 16px;min-height:48px;border-radius:14px;
+  background:var(--card);color:var(--ink);border:2px solid var(--line);cursor:pointer}
+.opt:disabled{cursor:default}
+.opt.ok{background:var(--ok-bg);border-color:var(--ok);font-weight:700}
+.opt.bad{background:var(--bad-bg);border-color:var(--bad)}
+.fb{margin-top:12px;padding-top:10px;border-top:2px dashed var(--line)}
+.verdict{font-size:20px;font-weight:700;margin:0 0 4px}
+.verdict.ok{color:var(--ok)} .verdict.bad{color:var(--bad)}
+.why{font-size:15px;line-height:1.5;margin:0 0 4px}
+.src{font-size:14px;color:var(--sub);margin:0 0 10px}
+.src a{color:var(--main-d);font-weight:700} body.boss .src a{color:var(--main)}
+.btn{font:inherit;font-size:19px;font-weight:700;width:100%;padding:13px;border-radius:14px;border:0;
+  background:var(--main);color:#fff;box-shadow:0 4px 0 var(--main-d);cursor:pointer}
+body.boss .btn{color:#2a1a2e}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--main-d)}
+.btn.ghost{background:transparent;color:var(--sub);box-shadow:none;border:2px solid var(--line);font-size:16px;padding:10px}
+.center{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:12px}
+.center h1{font-size:28px;margin:0}
+.center p{margin:0;font-size:16px;line-height:1.6;color:var(--sub)}
+.lv{display:grid;gap:10px;text-align:left;margin-top:4px}
+.lv button{font:inherit;display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;
+  padding:13px 16px;border-radius:14px;background:var(--card);color:var(--ink);border:2px solid var(--line);cursor:pointer}
+.lv b{font-size:18px} .lv small{display:block;font-size:13px;color:var(--sub);font-weight:400;margin-top:2px}
+.lv em{font-style:normal;font-size:13px;color:var(--ok);white-space:nowrap}
+.lv .bossbtn{background:#2a1a2e;color:#fff4d6;border-color:#e0a526;box-shadow:0 4px 0 #a9780f;padding:16px}
+.lv .bossbtn small{color:#cdb88a} .lv .bossbtn em{color:#e0a526}
+.score{font-size:60px;font-weight:800;color:var(--main);line-height:1}
+.review{text-align:left;display:grid;gap:8px}
+.review div{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:10px 12px;font-size:15px;line-height:1.5}
+.review b{color:var(--ok)}
+.review a{color:var(--main-d);font-weight:700} body.boss .review a{color:var(--main)}
+@media (max-height:640px){
+  .stem{font-size:19px;margin:8px 0 8px}
+  .opt{font-size:16px;padding:8px 14px;min-height:40px}
+  .opts{gap:6px}
+  .why{font-size:14px}
+  .fb{margin-top:8px;padding-top:8px}
+  .btn{padding:10px;font-size:18px}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// 題目依 06-1、06-2 影片字幕出題。秒＝該句在影片中開始的時間;引＝影片原句。
+const 片 = {
+  聲母:{名:"聲母", 網址:"https://youtu.be/5JMHOlZi5Qw"},
+  韻母聲調:{名:"韻母聲調", 網址:"https://youtu.be/cw7MQeBgsFI"}
+};
+const 關卡 = [
+ {id:"聲母", 名:"第 1 關　聲母", 說:"影片：原汁原味牛肉麵", 片:"聲母", 題:[
+  {題:"影片說，四號 z、c、s 是哪一碗麵？", 選:["原汁原味牛肉麵","紅燒牛肉麵","加料牛肉麵","清燉牛肉麵"], 秒:114,
+   引:"仙平老師說，四號是「原汁原味牛肉麵」。因為五號、六號，都是在這碗原味的麵上面加料。"},
+  {題:"五號，是在四號後面加上什麼？", 選:["i","h","v","ng"], 秒:124, 引:"五號，是在四號後面加上一個 i。"},
+  {題:"六號，是在四號後面加上什麼？", 選:["h","i","v","ng"], 秒:145, 引:"六號，是在四號後面加上一個 h。"},
+  {題:"z 加 i、c 加 i、s 加 i，念起來像哪一組注音？", 選:["ㄐ、ㄑ、ㄒ","ㄓ、ㄔ、ㄕ","ㄗ、ㄘ、ㄙ","ㄍ、ㄎ、ㄏ"], 秒:128,
+   引:"i 就是「一」的聲音，所以 z 加 i、c 加 i、s 加 i，念起來就像ㄐ、ㄑ、ㄒ。"},
+  {題:"影片說，哪幾號是「黑白區」？", 選:["一號到三號","四號到六號","一號到四號","只有一號"], 秒:45,
+   引:"聲母可以分成六組：一號到三號是黑白區，四號到六號是彩色區。"},
+  {題:"國小學的注音裡「沒有」的兩個聲母是哪兩個？", 選:["v 和 ng","v 和 h","ng 和 z","f 和 ng"], 秒:81,
+   引:"還有兩個，是我們國小學的注音裡沒有的。……v 和 ng，是注音沒有的兩個。"},
+  {題:"五號這一組（加 i）屬於聲母嗎？", 選:["不屬於，只是原味加了一個 i","屬於，是新的聲母","屬於，但只有客語才有","影片沒有說"], 秒:140,
+   引:"特別說明喔，這一組不屬於聲母，只是原味加了一個 i。"},
+  {題:"影片用什麼情境說明 ng 的念法？", 選:["說「嗯，不要」時開頭那個「嗯」","念英文的 n","念英文的 v","念注音的ㄏ"], 秒:95,
+   引:"第二個是 ng，就像同學約你去逛街，你說「嗯，不要」，開頭那個「嗯」。"}
+ ]},
+ {id:"韻母", 名:"第 2 關　韻母", 說:"影片：韻母＋聲調（前半）", 片:"韻母聲調", 題:[
+  {題:"海陸腔的單韻母一共有幾個？", 選:["七個","五個","六個","九個"], 秒:17, 引:"海陸腔的單韻母一共有七個。a、i、u、e、o、ii、er。"},
+  {題:"影片說，學 a、i、u、e、o 這五個，要請哪裡的朋友來幫忙？", 選:["日本朋友","英國朋友","韓國朋友","法國朋友"], 秒:31,
+   引:"仙平老師說，學這五個，就請日本朋友來幫忙。日本人念母音，就是 a、i、u、e、o。"},
+  {題:"ii 的聲音，影片拿什麼來比喻？", 選:["點沖天炮時，引線燒起來快要爆炸的聲音","念兩個ㄧ連在一起","打噴嚏的聲音","火車進站的聲音"], 秒:60,
+   引:"注意喔，一個 i 念ㄧ，兩個 i 可不是念「ㄧㄧ」。它的聲音，就像點沖天炮的時候，引線燒起來、快要爆炸的那個聲音。"},
+  {題:"ii 只能接在哪一號聲母的後面？", 選:["四號 z、c、s","一號 b、p、m、f","二號 d、t、n、l","三號 g、k、h"], 秒:71,
+   引:"ii 有一個特性：它只能跟四號做朋友。所以 ii 只會接在 z、c、s（ㄗㄘㄙ）的後面。"},
+  {題:"如果看到 ii 接在別的聲母後面，代表什麼？", 選:["那就是寫錯了，根本沒有這個字","是一個很少見的字","是客語特有的念法","要念成ㄧㄧ"], 秒:85,
+   引:"如果看到 ii 接在別的聲母後面，那就是寫錯了，根本沒有這個字。"},
+  {題:"er（ㄜ）只用在哪一個地方？", 選:["「仔」","「字」","「晒」","「穀」"], 秒:90,
+   引:"最後一個是 er，注音是ㄜ。它只用在一個地方：「仔」。"},
+  {題:"「仔」（er）要怎麼念？", 選:["念得短短的，輕輕碰一下就好","念得又長又重","拉長一點才好聽","要比前一個字更大聲"], 秒:104,
+   引:"這個「仔」不能念得又長又重，不然很不好聽。要念得短短的，輕輕碰一下就好。"},
+  {題:"「穀」的韻母，結尾是哪一類？", 選:["塞音收尾（b、d、g）","元音收尾","鼻音收尾（m、n、ng）","沒有收尾"], 秒:146,
+   引:"第三類是塞音收尾，結尾是 b、d、g。念到最後嘴巴突然停住，像「穀」。"}
+ ]},
+ {id:"聲調", 名:"第 3 關　聲調", 說:"影片：韻母＋聲調（後半）", 片:"韻母聲調", 題:[
+  {題:"影片裡的聲調口訣是哪一句？", 選:["三嫂晒穀毋盡力","三嫂穀晒毋盡力","嫂三晒穀毋盡力","三嫂晒穀盡毋力"], 秒:164,
+   引:"海陸腔有七個聲調，口訣是：三嫂晒穀毋盡力。"},
+  {題:"海陸腔有幾個聲調？", 選:["七個","四個","五個","六個"], 秒:164, 引:"海陸腔有七個聲調，口訣是：三嫂晒穀毋盡力。七個字剛好就是七個聲調。"},
+  {題:"「穀」是一聲，念起來是什麼樣子？", 選:["又短又高","從低往上升","又低又平","從高往下降"], 秒:180, 引:"一聲，穀，又短又高。"},
+  {題:"「嫂」是二聲，念起來是什麼樣子？", 選:["從低往上升","又短又高","又低又平","從高往下降"], 秒:186, 引:"二聲，嫂，從低往上升。"},
+  {題:"「晒」是三聲，念起來是什麼樣子？", 選:["又低又平","又短又高","從低往上升","又短又低"], 秒:189, 引:"三聲，晒，又低又平。"},
+  {題:"仙平老師的記法拿掉了哪三個長音？", 選:["毋、盡、三","穀、嫂、力","嫂、晒、力","穀、晒、三"], 秒:214,
+   引:"所以仙平老師的方法是：把長音拿掉，只留短音。拿掉毋、盡、三這三個長音。"},
+  {題:"學習時的「四加一」，多出來敗部復活的那一個是哪個字？", 選:["盡（三聲長音，中平調）","毋","三","力"], 秒:231,
+   引:"不過，三聲長音「盡」要敗部復活。……所以學習的時候，聲調是四加一。一、二、三、四聲，再加上一個中平調。"},
+  {題:"影片提醒「只留四個聲調」的記法，意思是什麼？", 選:["這是學習用的濃縮記法，不是說海陸腔只有四個聲調","海陸腔真的只有四個聲調","長音是錯誤的念法","考試只考四個聲調"], 秒:226,
+   引:"提醒你，這是學習用的濃縮記法，不是說海陸腔只有四個聲調。"}
+ ]}
+];
+const 魔王 = {id:"魔王", 名:"👹 魔王關", 說:"三關混合 15 題", 魔:true};
+
+const app = document.getElementById("app");
+const 時間 = s => Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+const 洗牌 = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const 連結 = q => `<a href="${片[q.片].網址}?t=${q.秒}" target="_blank" rel="noopener">${片[q.片].名}影片 ${時間(q.秒)}</a>`;
+function 讀(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function 存(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+let 這關, 題組, 位, 結果, 已答, 起;
+
+function 首頁(){
+  document.body.classList.remove("boss");
+  const 列 = 關卡.map(g=>{
+    const b = 讀("最高-"+g.id);
+    return `<button data-id="${g.id}"><span><b>${g.名}</b><small>${g.說}</small></span>${b?`<em>最高 ${b}/${g.題.length}</em>`:""}</button>`;
+  }).join("");
+  const bm = 讀("最高-魔王");
+  app.innerHTML = `<div class="center">
+    <h1>🍜 牛肉麵攤營業中</h1>
+    <p>影片看完了。你是店員，影片裡講過的重點，接得住嗎？<br>答錯會告訴你影片第幾分幾秒有講。</p>
+    <div class="lv">${列}
+      <button class="bossbtn" data-id="魔王"><span><b>${魔王.名}</b><small>${魔王.說}</small></span>${bm?`<em>最高 ${bm}/15</em>`:""}</button>
+    </div></div>`;
+  app.querySelectorAll(".lv button").forEach(b=> b.onclick=()=>開玩(b.dataset.id));
+}
+
+function 開玩(id){
+  if(id==="魔王"){
+    這關 = 魔王; document.body.classList.add("boss");
+    const 全 = []; 關卡.forEach(g=>g.題.forEach(q=>全.push(Object.assign({片:g.片},q))));
+    題組 = 洗牌(全).slice(0,15);
+  } else {
+    這關 = 關卡.find(g=>g.id===id); document.body.classList.remove("boss");
+    題組 = 洗牌(這關.題.map(q=>Object.assign({片:這關.片},q)));
+  }
+  位 = 0; 結果 = []; 起 = Date.now(); 出題();
+}
+
+function 出題(){
+  已答 = false;
+  const q = 題組[位];
+  const 選項 = 洗牌(q.選.map((t,i)=>({t,對:i===0})));
+  const 點 = 題組.map((_,i)=> `<i class="${i<結果.length ? (結果[i].對?"ok":"bad") : (i===位?"now":"")}"></i>`).join("");
+  app.innerHTML = `<div class="top"><span>${這關.名}　${位+1} / ${題組.length}</span><span class="dots">${點}</span></div>
+    <div class="stem">${q.題}</div><div class="opts" id="opts"></div><div id="fb"></div>`;
+  const box = document.getElementById("opts");
+  選項.forEach(o=>{
+    const b = document.createElement("button");
+    b.className="opt"; b.textContent=o.t;
+    b.onclick=()=>作答(b,o,選項,q);
+    box.appendChild(b);
+  });
+}
+
+function 作答(btn,o,選項,q){
+  if(已答) return; 已答 = true;
+  [...document.querySelectorAll(".opt")].forEach((b,i)=>{ b.disabled=true; if(選項[i].對) b.classList.add("ok"); });
+  if(!o.對) btn.classList.add("bad");
+  結果.push({q,對:o.對});
+  const 末 = 位===題組.length-1;
+  const fb = document.getElementById("fb");
+  fb.className = "fb";
+  fb.innerHTML = `<p class="verdict ${o.對?"ok":"bad"}">${o.對?"✔ 著咧！":"✘ 愛選綠色个"}</p>
+    <p class="why">影片原句：${q.引}</p>
+    <p class="src">${連結(q)}</p>
+    <button class="btn" id="nx">${末?"看結果":"下一題"}</button>`;
+  document.getElementById("nx").onclick=()=>{ 位++; 末?結算():出題(); };
+}
+
+function 結算(){
+  const 對 = 結果.filter(r=>r.對).length, 錯 = 結果.filter(r=>!r.對), 總 = 結果.length;
+  const 舊 = parseInt(讀("最高-"+這關.id)||"0",10);
+  if(對>舊) 存("最高-"+這關.id, String(對));
+  const 秒 = Math.round((Date.now()-起)/1000);
+  const 話 = 對===總 ? "全對！影片你都聽進去了。" : 對>=總-2 ? "很接近了，看一下錯的地方。" : "再看一次影片，重點就會記住。";
+  app.innerHTML = `<div class="center">
+    <div class="score">${對} / ${總}</div><p>${話}　用時 ${秒} 秒</p>
+    ${錯.length?`<div class="review">${錯.map(r=>`<div>${r.q.題}<br><b>${r.q.選[0]}</b>　${連結(r.q)}</div>`).join("")}</div>`:""}
+    <button class="btn" id="again">再玩一次</button>
+    <button class="btn ghost" id="home">回到關卡</button></div>`;
+  document.getElementById("again").onclick=()=>開玩(這關.id);
+  document.getElementById("home").onclick=首頁;
+}
+首頁();
+</script>
+</body>
+</html>
