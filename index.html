@@ -70,7 +70,10 @@ body.boss .btn{color:#2a1a2e}
 .lv em{font-style:normal;font-size:13px;color:var(--ok);white-space:nowrap}
 .lv .bossbtn{background:#2a1a2e;color:#fff4d6;border-color:#e0a526;box-shadow:0 4px 0 #a9780f;padding:16px}
 .lv .bossbtn small{color:#cdb88a} .lv .bossbtn em{color:#e0a526}
-.sid{font:inherit;font-size:18px;text-align:center;width:100%;padding:12px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink)}
+.center p{text-wrap:balance}
+.who{display:grid;gap:8px}
+.who .small{font-size:14px} .hint{color:var(--bad);font-size:14px;min-height:1px}
+.sid{font:inherit;font-size:18px;text-align:center;text-align-last:center;width:100%;padding:12px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink)}
 .sid::placeholder{color:var(--sub);font-size:15px}
 .sendmsg{font-size:15px;color:var(--sub)} .sendmsg.ok{color:var(--ok);font-weight:700}
 .mini{font:inherit;font-size:14px;padding:4px 10px;border-radius:8px;border:2px solid var(--main);background:transparent;color:var(--main);cursor:pointer}
@@ -154,9 +157,11 @@ const 關卡 = [
  ]}
 ];
 const 魔王 = {id:"魔王", 名:"拼音後測", 說:"聲母、韻母、聲調混合 15 題"};
-// 成績記錄:填入 Apps Script 網頁應用程式網址後,首頁會出現「學號」欄,測驗結束把分數送進老師的試算表(只寫入,不會把名單傳回網頁)。空白＝不記錄。
+// 成績記錄:填入 Apps Script 網頁應用程式網址後,首頁會出現「學校（下拉選單）＋名字」欄,測驗結束把分數送進老師的試算表(只寫入,不會把名單傳回網頁)。空白＝不記錄。
 const 成績網址 = "https://script.google.com/macros/s/AKfycbx2bg04ky2v-YNvdEYgkvmQVAZlGnpZDQjyqMbFQtPqGPjy7MOD6q9J_pzCW8PCkauSsQ/exec";
-let 學號 = "";
+// 學校名單取自教師「客語授課課程清單」總表的欄位標題(2026-11-12),都是 4 字簡稱;不在名單內的選「其他學校」自行輸入(最多 4 字)。
+const 學校名單 = ["誠正國中","金湖國中","石光國中","岡山國中","鼓山高中","屏實高中","木柵高工","興大附農","復興高中","北士商","景興國中","烏日國中","內湖國中","竹崎高中","武陵高中","陽明高中","尖石國中","振聲中學","興福國中","新屋高中"];
+let 學校 = "", 姓名 = "";
 const 型名 = {單選:"單選題",是非:"對錯題",多選:"多選題",配對:"配對題",分類:"分類題",排序:"排序題"};
 
 const app = document.getElementById("app");
@@ -183,14 +188,28 @@ function 首頁(){
   const bm = 讀("最高-魔王");
   app.innerHTML = `<div class="center">
     <h1>🍜 牛肉麵攤營業中</h1>
-    <p>聲母、韻母、聲調的影片看完了。你是店員，影片裡講過的重點，接得住嗎？<br>答錯會告訴你影片第幾分幾秒有講。</p>
-    ${成績網址?`<div><input id="sid" class="sid" maxlength="12" placeholder="學號（考試請輸入，成績會記錄給老師）" value="${學號}" autocomplete="off"></div>`:""}
+    <p>聲母、韻母、聲調的影片看完了。<br>你是店員，影片裡講過的重點，接得住嗎？<br>答錯要先看影片重點，才能做下一題。</p>
+    ${成績網址?`<div class="who">
+      <p class="small">考試請選學校、輸入名字，成績會記錄給老師；不填就是練習。</p>
+      <select id="sch" class="sid"><option value="">請選學校</option>${學校名單.map(s=>`<option${s===學校?" selected":""}>${s}</option>`).join("")}<option value="其他">其他學校</option></select>
+      <input id="sch2" class="sid" maxlength="4" placeholder="學校（最多 4 個字）" style="display:none" autocomplete="off">
+      <input id="nm" class="sid" maxlength="8" placeholder="名字" value="${姓名}" autocomplete="off">
+      <p class="hint" id="hint"></p></div>`:""}
     <div class="lv">
       <button class="bossbtn" data-id="魔王"><span><b>開始測驗</b><small>${魔王.說}</small></span>${bm?`<em>最高 ${bm}/15</em>`:""}</button>
     </div></div>`;
+  const sch = document.getElementById("sch");
+  if(sch) sch.onchange = ()=>{ document.getElementById("sch2").style.display = sch.value==="其他" ? "" : "none"; };
   app.querySelectorAll(".lv button").forEach(b=> b.onclick=()=>{
-    const s = document.getElementById("sid");
-    if(s) 學號 = s.value.replace(/[^A-Za-z0-9_-]/g,"").slice(0,12);
+    if(sch){
+      const 其他 = sch.value==="其他";
+      學校 = (其他 ? document.getElementById("sch2").value : sch.value).replace(/[^一-鿿A-Za-z0-9]/g,"").slice(0,4);
+      姓名 = document.getElementById("nm").value.replace(/[^一-鿿A-Za-z·]/g,"").slice(0,8);
+      if((學校&&!姓名)||(!學校&&姓名)){
+        document.getElementById("hint").textContent = "學校和名字要一起填，成績才會記錄；兩個都不填就是練習。";
+        return;
+      }
+    }
     開玩(b.dataset.id);
   });
 }
@@ -230,7 +249,22 @@ function 交(q, ok){
     <p class="why">影片原句：${q.引}</p>
     <p class="src">${連結(q)}</p>
     <button class="btn" id="nx">${末?"看結果":"下一題"}</button>`;
-  document.getElementById("nx").onclick=()=>{ 位++; 末?結算():出題(); };
+  const nx = document.getElementById("nx");
+  nx.onclick=()=>{ 位++; 末?結算():出題(); };
+  // 答錯：要先點影片連結、等影片重點看完（10 秒）才能按下一題
+  if(!ok){
+    nx.disabled = true; nx.textContent = "請先點上面的影片連結，看完再按";
+    let 開過 = false;
+    fb.querySelector(".src a").addEventListener("click", ()=>{
+      if(開過) return; 開過 = true;
+      let n = 10; nx.textContent = `看完影片重點才能按（${n}）`;
+      const t = setInterval(()=>{
+        n--;
+        if(n<=0){ clearInterval(t); nx.disabled = false; nx.textContent = 末?"看結果":"下一題"; }
+        else nx.textContent = `看完影片重點才能按（${n}）`;
+      }, 1000);
+    });
+  }
 }
 function 確定鈕(act, 可交, 評分){
   const b = document.createElement("button"); b.className="btn"; b.textContent="確定"; b.disabled=true;
@@ -349,15 +383,15 @@ const 建 = {
   }
 };
 
-// 把分數送進老師的試算表。只送出學號、分數、答錯題目的前幾個字;網頁收到的只有「成功與否」。
+// 把分數送進老師的試算表。只送出學校、名字、分數、答錯題目的前幾個字;網頁收到的只有「成功與否」。
 function 送成績(對, 總, 錯){
   const el = document.getElementById("send"); if(!el) return;
   el.className = "sendmsg"; el.textContent = "成績送出中…";
   const 錯題 = 錯.slice(0,12).map(r=>r.q.題.replace(/[\s（）()？「」，。、：]/g,"").slice(0,10)).join("｜");
-  const u = 成績網址+"?action=add&id="+encodeURIComponent(學號)+"&score="+對+"&total="+總+"&wrong="+encodeURIComponent(錯題);
+  const u = 成績網址+"?action=add&school="+encodeURIComponent(學校)+"&name="+encodeURIComponent(姓名)+"&score="+對+"&total="+總+"&wrong="+encodeURIComponent(錯題);
   fetch(u).then(r=>r.json()).then(j=>{
     if(!j||!j.ok) throw new Error("fail");
-    el.className = "sendmsg ok"; el.textContent = "✔ 學號 "+學號+" 的成績已記錄給老師";
+    el.className = "sendmsg ok"; el.textContent = "✔ "+學校+" "+姓名+" 的成績已記錄給老師";
   }).catch(()=>{
     el.innerHTML = `✘ 成績沒有送出成功。請確認網路後按「再送一次」，仍不行就截圖這個畫面給老師。 <button class="mini" id="rs">再送一次</button>`;
     document.getElementById("rs").onclick = ()=>送成績(對, 總, 錯);
@@ -371,11 +405,11 @@ function 結算(){
   const 話 = 對===總 ? "全對！影片你都聽進去了。" : 對>=總-2 ? "很接近了，看一下錯的地方。" : "再看一次影片，重點就會記住。";
   app.innerHTML = `<div class="center">
     <div class="score">${對} / ${總}</div><p>${話}</p>
-    ${學號&&成績網址?`<p class="sendmsg" id="send"></p>`:""}
+    ${學校&&姓名&&成績網址?`<p class="sendmsg" id="send"></p>`:""}
     ${錯.length?`<div class="review">${錯.map(r=>`<div>${r.q.題}<br><b>${正解文(r.q)}</b>　${連結(r.q)}</div>`).join("")}</div>`:""}
     <button class="btn" id="again">再玩一次</button></div>`;
   document.getElementById("again").onclick=()=>開玩(這關.id);
-  if(學號 && 成績網址) 送成績(對, 總, 錯);
+  if(學校 && 姓名 && 成績網址) 送成績(對, 總, 錯);
 }
 首頁();
 </script>
