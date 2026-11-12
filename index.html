@@ -190,7 +190,7 @@ function 首頁(){
     <h1>🍜 牛肉麵攤營業中</h1>
     <p>聲母、韻母、聲調的影片看完了。<br>你是店員，影片裡講過的重點，接得住嗎？<br>答錯要先看影片重點，才能做下一題。</p>
     ${成績網址?`<div class="who">
-      <p class="small">考試請選學校、輸入名字，成績會記錄給老師；不填就是練習。</p>
+      <p class="small">請選學校、輸入名字，成績會記錄給老師。考不好沒關係，可以重考刷新分數。</p>
       <select id="sch" class="sid"><option value="">請選學校</option>${學校名單.map(s=>`<option${s===學校?" selected":""}>${s}</option>`).join("")}<option value="其他">其他學校</option></select>
       <input id="sch2" class="sid" maxlength="4" placeholder="學校（最多 4 個字）" style="display:none" autocomplete="off">
       <input id="nm" class="sid" maxlength="8" placeholder="名字" value="${姓名}" autocomplete="off">
@@ -205,8 +205,8 @@ function 首頁(){
       const 其他 = sch.value==="其他";
       學校 = (其他 ? document.getElementById("sch2").value : sch.value).replace(/[^一-鿿A-Za-z0-9]/g,"").slice(0,4);
       姓名 = document.getElementById("nm").value.replace(/[^一-鿿A-Za-z·]/g,"").slice(0,8);
-      if((學校&&!姓名)||(!學校&&姓名)){
-        document.getElementById("hint").textContent = "學校和名字要一起填，成績才會記錄；兩個都不填就是練習。";
+      if(!學校 || !姓名){
+        document.getElementById("hint").textContent = !學校 && !姓名 ? "請先選學校、輸入名字，才能開始測驗。" : (!學校 ? "請選學校（或選「其他學校」自己輸入）。" : "請輸入名字。");
         return;
       }
     }
@@ -407,7 +407,7 @@ function 結算(){
     <div class="score">${對} / ${總}</div><p>${話}</p>
     ${學校&&姓名&&成績網址?`<p class="sendmsg" id="send"></p>`:""}
     ${錯.length?`<div class="review">${錯.map(r=>`<div>${r.q.題}<br><b>${正解文(r.q)}</b>　${連結(r.q)}</div>`).join("")}</div>`:""}
-    <button class="btn" id="again">再玩一次</button></div>`;
+    <button class="btn" id="again">再考一次</button></div>`;
   document.getElementById("again").onclick=()=>開玩(這關.id);
   if(學校 && 姓名 && 成績網址) 送成績(對, 總, 錯);
 }
