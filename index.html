@@ -478,7 +478,7 @@ function 送成績(對, 總, 錯){
 
 function 結算(){
   const 對 = 結果.filter(r=>r.對).length, 錯 = 結果.filter(r=>!r.對), 總 = 結果.length;
-  const 百 = Math.round(對/總*100);
+  const 百 = Math.min(100, 對*7);   // 一題 7 分，滿分封頂 100
   const 舊 = parseInt(讀("最高分-"+這關.id)||"0",10);
   if(百>舊) 存("最高分-"+這關.id, String(百));
   const 話 = 對===總 ? "全對！影片你都聽進去了。" : 對>=總-2 ? "很接近了，看一下錯的地方。" : "再看一次影片，重點就會記住。";
