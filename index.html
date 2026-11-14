@@ -265,7 +265,7 @@ function 首頁(){
     <h1>牛肉麵攤營業中</h1>
     <p>聲母、韻母、聲調的影片看完了。<br>你是店員，影片裡講過的重點，接得住嗎？<br>答錯要先看影片重點，才能做下一題。</p>
     ${成績網址?`<div class="who">
-      <p class="small">請選學校、輸入名字，成績會記錄給老師。考不好沒關係，可以多刷幾次，一直到你滿意的分數。</p>
+      <p class="small">請選學校、輸入名字，成績會記錄給老師。可以多刷幾次，一直到你滿意的分數。</p>
       <select id="sch" class="sid"><option value="">請選學校</option>${學校名單.map(s=>`<option${s===學校?" selected":""}>${s}</option>`).join("")}<option value="其他">其他學校</option></select>
       <input id="sch2" class="sid" maxlength="11" placeholder="請輸入學校名稱（最多 11 個字）" style="display:none" autocomplete="off">
       <input id="nm" class="sid" maxlength="8" placeholder="名字" value="${姓名}" autocomplete="off">
